@@ -1,8 +1,16 @@
 from selenium import webdriver as wb
 from selenium.webdriver.common.keys import Keys
 import unittest
+import time
 
 class NewVisitorTest( unittest.TestCase ):
+    
+    def check_for_row_in_list_table( self, row_text ):
+        table = self.browser.find_element_by_id( 'id_list_table' )
+        rows = table.find_elements_by_tag_name( 'tr' )
+        my_list = [ row.text for row in rows ]
+        self.assertIn( row_text, my_list )
+        
     def setUp( self ):
         self.browser = wb.Chrome( 'C:\Downloads\chromedriver' )
     
@@ -15,15 +23,15 @@ class NewVisitorTest( unittest.TestCase ):
         header_text = self.browser.find_element_by_tag_name( 'h1' ).text
         self.assertIn( 'To-Do', header_text )
         input_box = self.browser.find_element_by_id( 'id_new_item' )
-        self.assertEquals( input_box.get_attribute( 'placeholder' ), 'Enter a to-do item' )
+        self.assertEqual( input_box.get_attribute( 'placeholder' ), 'Enter a to-do item' )
         input_box.send_keys( 'Buy peacock feathers' )
 
         input_box.send_keys( Keys.ENTER )
-        table = self.browser.find_element_by_id( 'id_list_table' )
-        rows = table.find_elements_by_tag_name( 'tr' )
-        self.assertTrue(
-            any( row == '1: Buy peacock feathers' for row in rows )
-            )
+
+        time.sleep( 10 )
+        self.check_for_row_in_list_table( '1: Buy peacock feathers' )
+        self.check_for_row_in_list_table( '2: Peacock can fly in the sky' )
+        
         self.fail( 'Finish the test' )
         
 if __name__ == "__main__":

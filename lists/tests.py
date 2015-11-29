@@ -12,6 +12,16 @@ class HomePageTest( TestCase ):
     found = resolve( '/' )
     self.assertEqual( found.func, home_page )
 
+  def test_home_page_display_all_lists_items( self ):
+    Item.objects.create( text='Itemey 1' )
+    Item.objects.create( text='Itemey 2' )
+
+    request = HttpRequest()
+    response = home_page( request )
+
+    self.assertIn( 'Itemey 1', response.content.decode() )
+    self.assertIn( 'Itemey 2', response.content.decode() )
+
   def test_home_page_returns_correct_html( self ):
     request = HttpRequest()
     response = home_page( request )
@@ -25,26 +35,31 @@ class HomePageTest( TestCase ):
     request.POST['item_text'] = strn_r
 
     response = home_page( request )
-    self.assertIn( strn_r, response.content.decode() )
+    
+    self.assertEqual( Item.objects.count(), 1 )
+    new_item = Item.objects.first()
+    self.assertEqual( strn_r, new_item.text )
+    
+    self.assertEqual( response.status_code, 302 ) #test for redirection
+    self.assertIn( response['location'], '/' )
 
 class ItemModelTest( TestCase ):
+  def test_saving_and_retrieving_items( self ):
+    first_str, second_str = 'The first(ever) item saved', 'Second item'
+    first_item = Item()
+    first_item.text = first_str
+    first_item.save()
     
-    def test_saving_and_retrieving_items( self ):
-        first_str, second_str = 'The first(ever) item saved', 'Second item'
-        first_item = Item()
-        first_item.text = first_str
-        first_item.save()
-        
-        second_item = Item()
-        second_item.text = second_str
-        second_item.save()
-        
-        saved_items = Item.objects.all()
-        self.assertEqual( saved_items.count(), 2 )
-        
-        first_saved_item = saved_items[0]
-        second_saved_item = saved_items[1]
-        
-        self.assertEqual( first_saved_item.text, first_str )
-        self.assertEqual( second_saved_item.text, second_str )
-        
+    second_item = Item()
+    second_item.text = second_str
+    second_item.save()
+    
+    saved_items = Item.objects.all()
+    self.assertEqual( saved_items.count(), 2 )
+    
+    first_saved_item = saved_items[0]
+    second_saved_item = saved_items[1]
+    
+    self.assertEqual( first_saved_item.text, first_str )
+    self.assertEqual( second_saved_item.text, second_str )
+    
